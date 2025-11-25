@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Kullanım:
+# chiprate <oran>
+# Örnek:
+# chiprate 1.25
+
+RATE="$1"
+
+if [ -z "$RATE" ]; then
+    echo "KULLANIM: chiprate <oran>"
+    echo "Örnek: chiprate 1.25"
+    exit 1
+fi
+
+OUT="out_${RATE}"
+mkdir -p "$OUT"
+
+OLDIFS=$IFS
+IFS=$'\n'
+
+for f in $(find . -maxdepth 1 -type f -iname "*.mp3"); do
+    BASENAME=$(basename "$f")
+
+    # Dosya adı + uzantıyı ayır
+    NAME="${BASENAME%.*}"
+    EXT="${BASENAME##*.}"
+
+    # Sonuna oran ekle
+    OUTNAME="${NAME}_${RATE}.${EXT}"
+
+    ffmpeg -loglevel error -y -i "$f" \
+        -filter:a "asetrate=44100*${RATE},aresample=44100" \
+        "$OUT/$OUTNAME"
+done
+
+IFS=$OLDIFS
+
+echo "Bitti → çıktılar: $OUT/"
